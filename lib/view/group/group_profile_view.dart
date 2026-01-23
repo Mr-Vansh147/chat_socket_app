@@ -164,6 +164,23 @@ class _GroupProfileViewState extends State<GroupProfileView> {
                                     '${member?.firstName} ${member?.lastName}',
                                   ),
                                   subtitle: Text(member?.email ?? ''),
+                                  trailing: member?.role == 'admin'
+                                      ? Text(
+                                    "Admin",style: TextStyle(
+                                    color: Colors.green,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: -0.2,
+                                  ),
+                                  )
+                                    :Text(
+                                    "Member",style: TextStyle(
+                                    color: Colors.blueAccent,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w500,
+                                    letterSpacing: -0.5,
+                                  ),
+                                  ),
                                 ),
                               );
                             },

@@ -116,7 +116,7 @@ class GroupRepo {
     String? description,
     String? groupImage,
     List<String>? members,
-  }) {
+  }) async {
     final url = Uri.parse(
       ApiEndPoints.updateGroupProfile(userId: userId, groupId: groupId),
     );
@@ -126,13 +126,30 @@ class GroupRepo {
       "userId": userId,
       "name": groupName ?? '',
       "description": description ?? '',
-      "image": groupImage ?? '',
       "groupId": groupId,
     });
     for (final id in members!.where((id) => id != userId)) {
       request.files.add(http.MultipartFile.fromString('members[]', id));
     }
+    final extension = path.extension(groupImage!).toLowerCase();
 
+    MediaType mediaType;
+
+    if (extension == '.pdf') {
+      mediaType = MediaType('application', 'pdf');
+    } else if (extension == '.png') {
+      mediaType = MediaType('image', 'png');
+    } else {
+      mediaType = MediaType('image', 'jpeg');
+    }
+
+    request.files.add(
+      await http.MultipartFile.fromPath(
+      'image',
+      groupImage,
+      contentType: mediaType,
+    ),
+    );
     return request
         .send()
         .then((streamResponse) {

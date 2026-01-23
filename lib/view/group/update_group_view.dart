@@ -1,10 +1,13 @@
 import 'package:chat_socket_practice/controller/home/home_controller.dart';
+import 'package:chat_socket_practice/view/group/group_chat_view.dart';
+import 'package:chat_socket_practice/view/group/widgets/image_selection_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../controller/auth/auth_controller.dart';
 import '../../controller/group/group_profile_controller.dart';
 import '../../controller/group/select_users_controller.dart';
+import '../../model/pass_group_model.dart';
 
 class UpdateGroupView extends StatefulWidget {
   final String groupId;
@@ -50,7 +53,7 @@ class _UpdateGroupViewState extends State<UpdateGroupView> {
                   ),
                   const SizedBox(width: 10),
                   const Text(
-                    "Update Group",
+                    "Update Group Details",
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                 ],
@@ -62,19 +65,18 @@ class _UpdateGroupViewState extends State<UpdateGroupView> {
                 key: _formKey,
                 child: GetBuilder<GroupProfileController>(
                   builder: (controller) {
-                    final imageUrl =
-                        controller.groupProfile?.data?.image?.replaceAll(
-                          'localhost',
-                          '10.0.2.2',
-                        ) ??
-                        '';
+                    // final imageUrl =
+                    //     controller.groupProfile?.data?.image?.replaceAll(
+                    //       'localhost',
+                    //       '10.0.2.2',
+                    //     ) ??
+                    //     '';
+                    final displayImage = controller.displayImage;
                     final group = controller.groupProfile?.data;
                     if (controller.isLoading) {
                       return const Padding(
                         padding: EdgeInsets.only(top: 100),
-                        child: Center(
-                          child: CircularProgressIndicator(),
-                        ),
+                        child: Center(child: CircularProgressIndicator()),
                       );
                     }
 
@@ -84,17 +86,46 @@ class _UpdateGroupViewState extends State<UpdateGroupView> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Center(
-                            child: CircleAvatar(
-                              radius: 52,
-                              backgroundColor: Colors.green.shade200,
-                              child: CircleAvatar(
-                                radius: 48,
-                                backgroundImage:
-                                imageUrl.isNotEmpty ? NetworkImage(imageUrl) : null,
-                                child: imageUrl.isEmpty
-                                    ? const Icon(Icons.group, size: 36)
-                                    : null,
+                            child: Stack(
+                              clipBehavior: Clip.none,
+                              children: [
+                               CircleAvatar(
+                                radius: 52,
+                                backgroundColor: Colors.green.shade200,
+                                child: CircleAvatar(
+                                  radius: 48,
+                                backgroundImage: displayImage.isNotEmpty
+                                    ? NetworkImage(displayImage)
+                                  : null,
+
+                              child: displayImage.isEmpty
+                                      ? const Icon(Icons.group, size: 36)
+                                      : null,
+                                ),
                               ),
+                                if(controller.isAdmin)
+                                  Positioned(
+                                    bottom: -2,
+                                    right: -2,
+                                    child: CircleAvatar(
+                                      radius: 19,
+                                      backgroundColor: Colors.grey.shade50,
+                                      child: IconButton(
+                                        padding: EdgeInsets.zero,
+                                        constraints: const BoxConstraints(),
+                                        icon: const Icon(
+                                          Icons.photo_camera_outlined,
+                                          size: 18,
+                                          color: Colors.green,
+                                        ),
+                                        onPressed: () {
+                                          ImageSelectionSheet.showBottomSheet(context);
+                                        },
+                                      ),
+                                    ),
+                                  ),
+
+                      ],
                             ),
                           ),
 
@@ -112,12 +143,14 @@ class _UpdateGroupViewState extends State<UpdateGroupView> {
                                 ? 'Enter group name'
                                 : null,
                             decoration: InputDecoration(
-                              suffixIcon: controller.isAdmin ? Icon(Icons.lock_open_outlined) : Icon(Icons.lock_outline),
+                              suffixIcon: controller.isAdmin
+                                  ? Icon(Icons.lock_open_outlined)
+                                  : Icon(Icons.lock_outline),
                               hintText: 'Group name',
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(10),
                               ),
-                            )
+                            ),
                           ),
 
                           const SizedBox(height: 20),
@@ -135,7 +168,9 @@ class _UpdateGroupViewState extends State<UpdateGroupView> {
                                 ? 'Enter description'
                                 : null,
                             decoration: InputDecoration(
-                              suffixIcon: controller.isAdmin ? Icon(Icons.lock_open_outlined) : Icon(Icons.lock_outline) ,
+                              suffixIcon: controller.isAdmin
+                                  ? Icon(Icons.lock_open_outlined)
+                                  : Icon(Icons.lock_outline),
                               hintText: 'enter your First name',
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(10),
@@ -146,7 +181,7 @@ class _UpdateGroupViewState extends State<UpdateGroupView> {
                           const SizedBox(height: 20),
 
                           const Text(
-                            'Selected Users',
+                            'Members',
                             style: TextStyle(fontWeight: FontWeight.bold),
                           ),
                           const SizedBox(height: 12),
@@ -160,28 +195,52 @@ class _UpdateGroupViewState extends State<UpdateGroupView> {
                                 final member = group?.members?[index];
                                 return Padding(
                                   padding: const EdgeInsets.symmetric(
-                                    horizontal: 6,
+                                    horizontal: 8,
                                   ),
                                   child: Column(
                                     children: [
-                                      CircleAvatar(
-                                        radius: 30,
-                                        backgroundImage:
-                                            member?.profileImage?.isNotEmpty ==
-                                                true
-                                            ? NetworkImage(
-                                                Get.find<HomeController>()
-                                                    .normalizeImageUrl(
-                                                      member?.profileImage,
-                                                    ),
-                                              )
-                                            : null,
-                                        child:
-                                            member?.profileImage?.isEmpty ==
-                                                true
-                                            ? const Icon(Icons.person)
-                                            : null,
+                                      Stack(
+                                        clipBehavior: Clip.none,
+                                        children: [
+                                          CircleAvatar(
+                                            radius: 35,
+                                            backgroundImage: member?.profileImage?.isNotEmpty == true
+                                                ? NetworkImage(
+                                              Get.find<HomeController>()
+                                                  .normalizeImageUrl(member?.profileImage),
+                                            )
+                                                : null,
+                                            child: member?.profileImage?.isEmpty == true
+                                                ? const Icon(Icons.person)
+                                                : null,
+                                          ),
+                                          if(controller.isAdmin)
+                                          Positioned(
+                                            bottom: -2,
+                                            right: -2,
+                                            child: CircleAvatar(
+                                              radius: 14,
+                                              backgroundColor: Colors.green.shade50,
+                                              child: IconButton(
+                                                padding: EdgeInsets.zero,
+                                                constraints: const BoxConstraints(),
+                                                icon: const Icon(
+                                                  Icons.close,
+                                                  size: 16,
+                                                  color: Colors.red,
+                                                ),
+                                                onPressed: () {
+                                                  // controller.removeMember(
+                                                  //   groupId: widget.groupId,
+                                                  //   memberId: member?.sId,
+                                                  // );
+                                                },
+                                              ),
+                                            ),
+                                          ),
+                                        ],
                                       ),
+
                                       const SizedBox(height: 4),
                                       SizedBox(
                                         width: 60,
@@ -213,37 +272,47 @@ class _UpdateGroupViewState extends State<UpdateGroupView> {
                               ),
                               onPressed: controller.isAdmin
                                   ? () {
-                                      if (!_formKey.currentState!.validate()) {
-                                        return;
-                                      }
+                                if (!_formKey.currentState!.validate()) {
+                                  return;
+                                }
 
-                                      controller.updateGroupProfile(
-                                        userId:
-                                            Get.find<AuthController>().userId!,
-                                        groupId: widget.groupId,
-                                        groupName:
-                                            controller.groupNameController.text,
-                                        description: controller
-                                            .descriptionController
-                                            .text,
-                                        members: selectUsersController
-                                            .selectedUsers
-                                            .map((user) => user.id!)
-                                            .toList(),
-                                      );
-                                    }
+                                controller.updateGroupProfile(
+                                  userId:
+                                  Get
+                                      .find<AuthController>()
+                                      .userId!,
+                                  groupId: widget.groupId,
+                                  groupName:
+                                  controller.groupNameController.text,
+                                  description: controller
+                                      .descriptionController
+                                      .text,
+                                  members: selectUsersController
+                                      .selectedUsers
+                                      .map((user) => user.id!)
+                                      .toList(),
+                                  image: displayImage,
+                                );
+                                final group = PassGroupModel(
+                                  groupId: widget.groupId,
+                                  groupName:  controller.groupNameController.text,
+                                  groupImage: displayImage,
+                                  groupDescription: controller
+                                      .descriptionController
+                                      .text,
+                                );
+                                  Get.offAll(() => GroupChatView(group: group));
+                              }
                                   : null,
                               child: Text(
-                                controller.isAdmin
-                                    ? 'Update Group'
-                                    : 'Admin Only',
+                                controller.isAdmin ? 'Update' : 'Admin Only',
                                 style: TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
                                   color: controller.isAdmin
                                       ? Colors.black
                                       : Colors.grey.shade600,
-                                )
+                                ),
                               ),
                             ),
                           ),

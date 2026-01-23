@@ -15,6 +15,18 @@ class GroupProfileController extends GetxController {
   String errorMessage = '';
   GroupMembersModel? groupProfile;
   UpdateGroupProfileModel? updateGroup;
+  String? changeImage;
+
+  String get displayImage =>
+      changeImage ??
+          groupProfile?.data?.image ??
+          '';
+
+  void setUpdatedGroupImage(String imageUrl) {
+    changeImage = imageUrl;
+    update();
+  }
+
 
   final TextEditingController groupNameController = TextEditingController();
   final TextEditingController descriptionController = TextEditingController();
