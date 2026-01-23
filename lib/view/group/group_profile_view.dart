@@ -1,4 +1,5 @@
 import 'package:chat_socket_practice/controller/home/home_controller.dart';
+import 'package:chat_socket_practice/view/group/update_group_view.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -29,6 +30,14 @@ class _GroupProfileViewState extends State<GroupProfileView> {
       backgroundColor: Colors.blue.shade100,
       body: GetBuilder<GroupProfileController>(
         builder: (controller) {
+          if (controller.isLoading) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (controller.groupProfile?.data == null) {
+            return const Center(child: Text('Unable to load group profile'));
+          }
+
           final group = controller.groupProfile?.data;
           String imageUrl = group?.image ?? '';
           return Padding(
@@ -36,57 +45,63 @@ class _GroupProfileViewState extends State<GroupProfileView> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    IconButton(
-                      onPressed: () {
-                        Get.back();
-                      },
-                      icon: Icon(
-                        Icons.arrow_back_ios_new_outlined,
-                        color: Colors.green,
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 5),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      IconButton(
+                        onPressed: () {
+                          Get.back();
+                        },
+                        icon: Icon(
+                          Icons.arrow_back_ios_new_outlined,
+                          color: Colors.green,
+                        ),
                       ),
-                    ),
-                    Column(
-                      children: [
-                        CircleAvatar(
-                          radius: 60,
-                          backgroundImage: imageUrl.isNotEmpty
-                              ? NetworkImage(imageUrl)
-                              : null,
-                          child: imageUrl.isEmpty
-                              ? const Icon(Icons.person, size: 40)
-                              : null,
-                        ),
-                        SizedBox(height: 10),
-                        Text(
-                          "${group?.name}",
-                          style: TextStyle(
-                            color: Colors.black,
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: -0.6,
+                      Column(
+                        children: [
+                          CircleAvatar(
+                            radius: 60,
+                            backgroundImage: imageUrl.isNotEmpty
+                                ? NetworkImage(imageUrl)
+                                : null,
+                            child: imageUrl.isEmpty
+                                ? const Icon(Icons.person, size: 40)
+                                : null,
                           ),
-                        ),
-                        SizedBox(height: 2),
-                        Text(
-                          "${group?.description}",
-                          style: TextStyle(
-                            color: Colors.black45,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                            letterSpacing: -0.6,
+                          SizedBox(height: 10),
+                          Text(
+                            "${group?.name}",
+                            style: TextStyle(
+                              color: Colors.black,
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: -0.6,
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                    IconButton(
-                      onPressed: () {},
-                      icon: Icon(Icons.more_vert_outlined, color: Colors.black),
-                    ),
-                  ],
+                          SizedBox(height: 2),
+                          Text(
+                            "${group?.description}",
+                            style: TextStyle(
+                              color: Colors.black45,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              letterSpacing: -0.6,
+                            ),
+                          ),
+                        ],
+                      ),
+                      IconButton(
+                        onPressed: () {
+                          Get.to(()=> UpdateGroupView(groupId: widget.groupId),
+                          transition: Transition.fade);
+                        },
+                        icon: Icon(Icons.edit_outlined, color: Colors.black),
+                      ),
+                    ],
+                  ),
                 ),
                 Divider(color: Colors.grey.shade200),
                 SizedBox(height: 10),

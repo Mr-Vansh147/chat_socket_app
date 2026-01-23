@@ -136,6 +136,8 @@ class GroupCreateController extends GetxController {
     }
   }
 
+
+
   void clearField() async {
     groupNameController.clear();
     descriptionController.clear();

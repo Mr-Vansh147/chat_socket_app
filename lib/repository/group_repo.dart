@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:chat_socket_practice/model/group_list_model.dart';
+import 'package:chat_socket_practice/model/update_group_profile_model.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/http.dart';
 import 'package:path/path.dart' as path;
@@ -95,9 +96,9 @@ class GroupRepo {
     return null;
   }
 
-  Future<GroupMembersModel?> groupMembers({required String groupId}) async {
+  Future<GroupMembersModel?> groupProfile({required String groupId}) async {
     try {
-      final url = Uri.parse(ApiEndPoints.groupMembers(groupId: groupId));
+      final url = Uri.parse(ApiEndPoints.groupProfile(groupId: groupId));
       final response = await http.get(url);
       if (response.statusCode == 200) {
         return GroupMembersModel.fromJson(jsonDecode(response.body));
@@ -106,5 +107,49 @@ class GroupRepo {
       throw Exception(e.toString());
     }
     return null;
+  }
+
+  Future<UpdateGroupProfileModel> updateGroupProfile({
+    required String userId,
+    required String groupId,
+    String? groupName,
+    String? description,
+    String? groupImage,
+    List<String>? members,
+  }) {
+    final url = Uri.parse(
+      ApiEndPoints.updateGroupProfile(userId: userId, groupId: groupId),
+    );
+    final request = http.MultipartRequest('PUT', url);
+
+    request.fields.addAll({
+      "userId": userId,
+      "name": groupName ?? '',
+      "description": description ?? '',
+      "image": groupImage ?? '',
+      "groupId": groupId,
+    });
+    for (final id in members!.where((id) => id != userId)) {
+      request.files.add(http.MultipartFile.fromString('members[]', id));
+    }
+
+    return request
+        .send()
+        .then((streamResponse) {
+          return http.Response.fromStream(streamResponse);
+        })
+        .then((response) {
+          print("BODY: ${response.body}");
+
+          if (response.statusCode == 200) {
+            final jsonData = jsonDecode(response.body);
+            return UpdateGroupProfileModel.fromJson(jsonData);
+          } else {
+            throw Exception("Update failed: ${response.statusCode}");
+          }
+        })
+        .catchError((error) {
+          throw Exception("Request failed: $error");
+        });
   }
 }

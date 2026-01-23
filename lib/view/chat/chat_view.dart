@@ -90,11 +90,10 @@ class _ChatViewState extends State<ChatView> {
                             widget.user.email ?? '',
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              color: Colors.black45,
+                            style:  TextStyle(
+                              color: Colors.grey.shade500,
                               fontSize: 12,
                               fontWeight: FontWeight.w500,
-                              letterSpacing: -0.2,
                             ),
                           ),
                         ],
@@ -226,8 +225,9 @@ class _ChatViewState extends State<ChatView> {
                                                   child,
                                                   loadingProgress,
                                                 ) {
-                                                  if (loadingProgress == null)
+                                                  if (loadingProgress == null) {
                                                     return child;
+                                                  }
                                                   return const SizedBox(
                                                     width: 200,
                                                     height: 200,

@@ -281,7 +281,8 @@ class _HomeViewState extends State<HomeView> {
                                     final chatGroup = PassGroupModel(
                                       groupId: group!.sId!,
                                       groupName: group.name!,
-                                      groupImage: group.image,
+                                      groupImage: group.image!,
+                                      groupDescription: group.description!,
                                     );
                                     Get.to(
                                       () => GroupChatView(group: chatGroup),

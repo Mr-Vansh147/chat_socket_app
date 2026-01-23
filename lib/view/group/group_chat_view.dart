@@ -2,12 +2,10 @@ import 'package:chat_socket_practice/model/pass_group_model.dart';
 import 'package:chat_socket_practice/view/group/group_profile_view.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-
 import '../../controller/chat/chat_controller.dart';
 import '../../controller/group/group_chat_controller.dart';
 import '../../controller/home/home_controller.dart';
 import '../chat/widgets/attech_file_sheet.dart';
-import '../profile/profile_view.dart';
 
 class GroupChatView extends StatefulWidget {
   final PassGroupModel group;
@@ -54,6 +52,30 @@ class _GroupChatViewState extends State<GroupChatView> {
                       ),
                     ),
                     const SizedBox(width: 10),
+                    GestureDetector(
+                      onTap: () {
+                        Get.to(
+                              () => GroupProfileView(groupId: widget.group.groupId),
+                          transition: Transition.leftToRightWithFade,
+                        );
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.only(right: 16),
+                        child: CircleAvatar(
+                          radius: 20,
+                          backgroundImage:
+                          (widget.group.groupImage != null &&
+                              widget.group.groupImage!.isNotEmpty)
+                              ? NetworkImage(widget.group.groupImage!)
+                              : null,
+                          child:
+                          (widget.group.groupImage == null ||
+                              widget.group.groupImage!.isEmpty)
+                              ? const Icon(Icons.person)
+                              : null,
+                        ),
+                      ),
+                    ),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -70,60 +92,52 @@ class _GroupChatViewState extends State<GroupChatView> {
                               height: 1,
                             ),
                           ),
-                          // GetBuilder<ChatController>(
-                          //   builder: (controller) {
-                          //     return SizedBox(
-                          //       height: 20,
-                          //       child: AnimatedSwitcher(
-                          //         duration: const Duration(milliseconds: 300),
-                          //         transitionBuilder:
-                          //             (Widget child, Animation<double> animation) {
-                          //           return FadeTransition(
-                          //             opacity: animation,
-                          //             child: child,
-                          //           );
-                          //         },
-                          //         child: controller.isOtherTyping
-                          //             ? Text(
-                          //           "Messaging...",
-                          //           key: const ValueKey("typing"),
-                          //           style: TextStyle(
-                          //             color: Colors.black45,
-                          //             fontSize: 14,
-                          //           ),
-                          //         )
-                          //             : const SizedBox.shrink(key: ValueKey("empty")),
-                          //       ),
-                          //     );
-                          //   },
-                          // ),
+                          Text(
+                              widget.group.groupDescription ?? '',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: Colors.grey.shade500,
+                            fontSize: 12,
+                            fontWeight: .w500
+                          ),),
+
+
                         ],
                       ),
                     ),
-                    GestureDetector(
-                      onTap: () {
-                        Get.to(
-                          () => GroupProfileView(groupId: widget.group.groupId),
-                          transition: Transition.leftToRightWithFade,
-                        );
-                      },
-                      child: Padding(
-                        padding: const EdgeInsets.only(right: 16),
-                        child: CircleAvatar(
-                          radius: 24,
-                          backgroundImage:
-                              (widget.group.groupImage != null &&
-                                  widget.group.groupImage!.isNotEmpty)
-                              ? NetworkImage(widget.group.groupImage!)
-                              : null,
-                          child:
-                              (widget.group.groupImage == null ||
-                                  widget.group.groupImage!.isEmpty)
-                              ? const Icon(Icons.person)
-                              : null,
-                        ),
-                      ),
+                    // GetBuilder<ChatController>(
+                    //   builder: (controller) {
+                    //     return SizedBox(
+                    //       height: 20,
+                    //       child: AnimatedSwitcher(
+                    //         duration: const Duration(milliseconds: 300),
+                    //         transitionBuilder:
+                    //             (Widget child, Animation<double> animation) {
+                    //           return FadeTransition(
+                    //             opacity: animation,
+                    //             child: child,
+                    //           );
+                    //         },
+                    //         child: controller.isOtherTyping
+                    //             ? Text(
+                    //           "Messaging...",
+                    //           key: const ValueKey("typing"),
+                    //           style: TextStyle(
+                    //             color: Colors.black45,
+                    //             fontSize: 14,
+                    //           ),
+                    //         )
+                    //             : const SizedBox.shrink(key: ValueKey("empty")),
+                    //       ),
+                    //     );
+                    //   },
+                    // ),
+                    IconButton(
+                      onPressed: () {},
+                      icon: Icon(Icons.more_vert_outlined, color: Colors.black),
                     ),
+
                   ],
                 );
               },

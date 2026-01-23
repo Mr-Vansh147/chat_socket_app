@@ -7,7 +7,7 @@ class ApiEndPoints {
   static String uploadImage() => '$_baseUrl/api/v1/chat/upload-image';
   static String newGroup() => '$_baseUrl/api/v1/group/create';
 
-  static String groupMembers({required String groupId}) {
+  static String groupProfile({required String groupId}) {
     return '$_baseUrl/api/v1/group/$groupId';
   }
 
@@ -26,6 +26,13 @@ class ApiEndPoints {
 
   static String updateProfile({required String userId}) {
     return '$_baseUrl/api/v1/users/$userId';
+  }
+
+  static String updateGroupProfile({
+    required String userId,
+    required String groupId,
+  }) {
+    return '$_baseUrl/api/v1/group/update';
   }
 
   static String getUserList({

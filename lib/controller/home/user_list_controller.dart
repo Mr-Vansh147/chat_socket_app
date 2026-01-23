@@ -21,7 +21,6 @@ class UserListController extends GetxController {
 
   List<Data?> list = [];
 
-  final TextEditingController searchController = TextEditingController();
   final ScrollController scrollController = ScrollController();
 
   Timer? debounceTimer;
@@ -58,27 +57,6 @@ class UserListController extends GetxController {
     await fetchUserList(userId: currentUserId);
     isPulling = false;
     update();
-  }
-
-  void performSearch(String query, String userId) {
-    if (debounce?.isActive ?? false) debounce!.cancel();
-
-    debounce = Timer(const Duration(milliseconds: 500), () {
-      final value = query.trim();
-
-      if (value.isEmpty) {
-        reset(userId);
-        return;
-      }
-
-      isSearching = true;
-      page = 1;
-      hasMore = true;
-      list.clear();
-      update();
-
-      fetchUserList(userId: userId);
-    });
   }
 
   Future<void> fetchUserList({
@@ -157,7 +135,6 @@ class UserListController extends GetxController {
     isSearching = false;
     isPulling = false;
     list.clear();
-    searchController.clear();
     update();
   }
 }
