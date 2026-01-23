@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "322015480465",
+    "project_id": "chatsocketpractice",
+    "storage_bucket": "chatsocketpractice.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:322015480465:android:b13b161483b460a395cd30",
+        "android_client_info": {
+          "package_name": "com.example.chat_socket_practice"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCAs-o9e42wjQpuTUKoYLuz0pgAMwilW1I"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
