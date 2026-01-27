@@ -93,7 +93,6 @@ class GroupProfileController extends GetxController {
       if (response.data == null) {
         throw Exception('Failed to update group profile');
       }
-
       updateGroup = response.data as UpdateGroupProfileModel?;
     } catch (e) {
       errorMessage = e.toString();

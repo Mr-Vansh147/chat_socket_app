@@ -1,8 +1,6 @@
 import 'package:chat_socket_practice/controller/group/group_profile_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-
-import '../../../controller/chat/chat_controller.dart';
 import '../../../controller/chat/image_controller.dart';
 
 class ImageSelectionSheet {
