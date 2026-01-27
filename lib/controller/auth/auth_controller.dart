@@ -3,8 +3,9 @@ import 'package:chat_socket_practice/controller/home/home_controller.dart';
 import 'package:chat_socket_practice/view/auth/login_view.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:mime/mime.dart';
-
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../config/exception_helper.dart';
 import '../../repository/auth_repo.dart';
 import '../../services/image_picker_service.dart';
@@ -13,6 +14,8 @@ import '../../view/home/home_view.dart';
 import '../chat/chat_controller.dart';
 
 class AuthController extends GetxController {
+  final FirebaseAuth auth = FirebaseAuth.instance;
+  final GoogleSignIn googleSignIn = GoogleSignIn.instance;
   final AuthRepo authRepo = AuthRepo();
 
   final TextEditingController firstNameController = TextEditingController();
@@ -33,7 +36,6 @@ class AuthController extends GetxController {
   String? userFirstName;
   String? userProfileImage;
 
-
   @override
   void onInit() {
     super.onInit();
@@ -50,6 +52,7 @@ class AuthController extends GetxController {
       update();
     }
   }
+
   Future<void> register({
     required String firstName,
     required String lastName,
@@ -160,10 +163,7 @@ class AuthController extends GetxController {
         userFirstName = response.data!.firstName.toString();
         userProfileImage = response.data!.profileImage.toString();
 
-        await PrefService.saveLogin(
-          isLoggedIn: true,
-          userId: userId!,
-        );
+        await PrefService.saveLogin(isLoggedIn: true, userId: userId!);
         print('LOGIN SAVED TO PREFS');
 
         await PrefService.saveUserMeta(
@@ -198,6 +198,56 @@ class AuthController extends GetxController {
     }
   }
 
+  Future<User?> signInWithGoogle() async {
+    try {
+      await googleSignIn.initialize();
+
+      final GoogleSignInAccount googleUser = await googleSignIn.authenticate();
+      final GoogleSignInAuthentication auth = googleUser.authentication;
+
+      final idToken = auth.idToken;
+      if (idToken == null) {
+        print("Google ID token is null");
+        return null;
+      }
+
+      final credential = GoogleAuthProvider.credential(idToken: idToken);
+
+      final UserCredential userCredential = await FirebaseAuth.instance
+          .signInWithCredential(credential);
+
+      if (userCredential.user != null) {
+        userId = userCredential.user!.uid;
+        userFirstName = userCredential.user!.displayName;
+        userProfileImage = userCredential.user!.photoURL;
+
+        await PrefService.saveLogin(isLoggedIn: true, userId: userId!);
+        print('Google LOGIN SAVED TO PREFS');
+        print('Google USER ID: $userId');
+        print('Google USER FIRST NAME: $userFirstName');
+
+        await PrefService.saveUserMeta(
+          firstName: userFirstName ?? '',
+          profileImage: userProfileImage ?? '',
+        );
+        Get.snackbar(
+          "Success",
+          "Google sign‑in successful",
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+        );
+
+        Get.find<ChatController>().initSocket();
+        Get.offAll(() => HomeView(userID: userId!));
+      }
+      return userCredential.user;
+    } catch (e) {
+      print("Google sign‑in error: $e");
+      return null;
+    }
+  }
+
   void visibility() {
     isVisiblity = !isVisiblity;
     update();
@@ -223,6 +273,7 @@ class AuthController extends GetxController {
     loginEmailController.clear();
     loginPasswordController.clear();
     selectedImage = null;
+
     update();
   }
 
@@ -237,17 +288,17 @@ class AuthController extends GetxController {
   }
 
   void logOut() async {
+    await auth.signOut();
+    await googleSignIn.signOut();
     clearField();
     Get.find<HomeController>().onLogout();
-      Get.find<ChatController>().socketService.disconnect();
-      Get.find<ChatController>().onLogout();
-   await PrefService.logout();
+    Get.find<ChatController>().socketService.disconnect();
+    Get.find<ChatController>().onLogout();
+    await PrefService.logout();
     Get.offAll(
-          () => LoginView(),
+      () => LoginView(),
       transition: Transition.fade,
       duration: const Duration(milliseconds: 500),
-
     );
   }
-
 }

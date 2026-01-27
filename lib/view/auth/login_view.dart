@@ -1,11 +1,12 @@
 import 'package:chat_socket_practice/view/auth/sign_up_view.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 
 import '../../controller/auth/auth_controller.dart';
 
 class LoginView extends StatefulWidget {
- const LoginView({super.key});
+  const LoginView({super.key});
 
   @override
   State<LoginView> createState() => _LoginViewState();
@@ -103,7 +104,8 @@ class _LoginViewState extends State<LoginView> {
                         obscureText: controller.isVisiblity,
                         decoration: InputDecoration(
                           hintText: 'Enter you password',
-                          suffixIcon: IconButton(onPressed: controller.visibility,
+                          suffixIcon: IconButton(
+                            onPressed: controller.visibility,
                             icon: Icon(
                               controller.isVisiblity
                                   ? Icons.visibility_off
@@ -122,35 +124,37 @@ class _LoginViewState extends State<LoginView> {
                           width: double.infinity,
                           child: ElevatedButton(
                             style: ButtonStyle(
-                              backgroundColor: WidgetStateProperty.all(Colors.green),
+                              backgroundColor: WidgetStateProperty.all(
+                                Colors.green,
+                              ),
                             ),
                             onPressed: controller.isLoginSubmit
                                 ? null
                                 : () {
-                              if (!_loginFormKey.currentState!.validate()) return;
-                              controller.login();
-                            },
+                                    if (!_loginFormKey.currentState!.validate())
+                                      return;
+                                    controller.login();
+                                  },
                             child: controller.isLoginSubmit
                                 ? const SizedBox(
-                              height: 24,
-                              width: 24,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.black,
-                              ),
-                            )
+                                    height: 24,
+                                    width: 24,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.black,
+                                    ),
+                                  )
                                 : const Text(
-                              'Login',
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: -0.6,
-                                color: Colors.black,
-                              ),
-                            ),
+                                    'Login',
+                                    style: TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: -0.6,
+                                      color: Colors.black,
+                                    ),
+                                  ),
                           ),
                         ),
-
                       ),
                     ],
                   ),
@@ -164,16 +168,71 @@ class _LoginViewState extends State<LoginView> {
                       controller.isSignupSubmit = false;
                       controller.update();
                       controller.clearField();
-                      Get.to(()=> SignUpView());
+                      Get.to(() => SignUpView());
                     },
-                    child: Text('Create Account?', style: TextStyle(
+                    child: Text(
+                      'Create Account?',
+                      style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                         letterSpacing: -0.6,
                         color: Colors.black54,
-                    ),),
+                      ),
+                    ),
                   ),
-                )
+                ),
+                SizedBox(height: 10),
+                Center(
+                  child: Text(
+                    'Or',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: -0.6,
+                      color: Colors.black,
+                    ),
+                  ),
+                ),
+                SizedBox(height: 10),
+                Center(
+                  child: SizedBox(
+                    height: 50,
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      style: ButtonStyle(
+                        backgroundColor: WidgetStateProperty.all(Colors.green),
+                      ),
+                      onPressed: () {
+                        controller.signInWithGoogle();
+                      },
+                      child: controller.isLoginSubmit
+                          ? const SizedBox(
+                              height: 24,
+                              width: 24,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.black,
+                              ),
+                            )
+                          : Row(
+                        mainAxisAlignment: .center,
+                              children: [
+                                SvgPicture.asset("assets/svg/google_logo.svg",height: 30,),
+                                SizedBox(width: 10,),
+                                Text(
+                                  'Login With Google',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: -0.2,
+                                    color: Colors.black,
+                                  ),
+                                ),
+                              ],
+                            ),
+                    ),
+                  ),
+                ),
               ],
             ),
           );
