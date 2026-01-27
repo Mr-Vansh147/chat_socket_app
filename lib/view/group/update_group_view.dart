@@ -230,10 +230,11 @@ class _UpdateGroupViewState extends State<UpdateGroupView> {
                                                   color: Colors.red,
                                                 ),
                                                 onPressed: () {
-                                                  // controller.removeMember(
-                                                  //   groupId: widget.groupId,
-                                                  //   memberId: member?.sId,
-                                                  // );
+                                                  controller.removeMemberFromGroup(
+                                                    adminId: Get.find<AuthController>().userId!,
+                                                    groupId: widget.groupId,
+                                                    memberId: member!.userId!,
+                                                  );
                                                 },
                                               ),
                                             ),
@@ -266,42 +267,34 @@ class _UpdateGroupViewState extends State<UpdateGroupView> {
                             height: 50,
                             child: ElevatedButton(
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: controller.isAdmin
-                                    ? Colors.green
-                                    : Colors.grey.shade400,
+                                backgroundColor:
+                                controller.isAdmin ? Colors.green : Colors.grey.shade400,
                               ),
                               onPressed: controller.isAdmin
-                                  ? () {
-                                if (!_formKey.currentState!.validate()) {
-                                  return;
-                                }
+                                  ? () async {
+                                if (!_formKey.currentState!.validate()) return;
 
-                                controller.updateGroupProfile(
-                                  userId:
-                                  Get
-                                      .find<AuthController>()
-                                      .userId!,
+                                await controller.updateGroupProfile(
+                                  userId: Get.find<AuthController>().userId!,
                                   groupId: widget.groupId,
-                                  groupName:
-                                  controller.groupNameController.text,
-                                  description: controller
-                                      .descriptionController
-                                      .text,
-                                  members: selectUsersController
-                                      .selectedUsers
+                                  groupName: controller.groupNameController.text,
+                                  description: controller.descriptionController.text,
+                                  members: selectUsersController.selectedUsers
                                       .map((user) => user.id!)
                                       .toList(),
                                   image: displayImage,
                                 );
-                                final group = PassGroupModel(
-                                  groupId: widget.groupId,
-                                  groupName:  controller.groupNameController.text,
-                                  groupImage: displayImage,
-                                  groupDescription: controller
-                                      .descriptionController
-                                      .text,
-                                );
-                                  Get.offAll(() => GroupChatView(group: group));
+
+                                if (controller.errorMessage.isEmpty) {
+                                  final group = PassGroupModel(
+                                    groupId: widget.groupId,
+                                    groupName: controller.groupNameController.text,
+                                    groupImage: displayImage,
+                                    groupDescription:
+                                    controller.descriptionController.text,
+                                  );
+                                  Get.off(() => GroupChatView(group: group));
+                                }
                               }
                                   : null,
                               child: Text(

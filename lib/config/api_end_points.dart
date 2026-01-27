@@ -1,6 +1,6 @@
 class ApiEndPoints {
-  static const String _baseUrl = 'http://192.168.1.83:2000';
-  static const String socketUrl = "http://192.168.1.83:2000";
+  static const String _baseUrl = 'http://192.168.1.52:2000';
+  static const String socketUrl = "http://192.168.1.52:2000";
 
   static String register() => '$_baseUrl/api/v1/users/register';
   static String login() => '$_baseUrl/api/v1/users/login';

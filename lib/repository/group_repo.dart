@@ -131,25 +131,29 @@ class GroupRepo {
     for (final id in members!.where((id) => id != userId)) {
       request.files.add(http.MultipartFile.fromString('members[]', id));
     }
-    final extension = path.extension(groupImage!).toLowerCase();
+    if (groupImage != null &&
+        groupImage.isNotEmpty &&
+        !groupImage.startsWith('http')) {
 
-    MediaType mediaType;
+      final extension = path.extension(groupImage).toLowerCase();
 
-    if (extension == '.pdf') {
-      mediaType = MediaType('application', 'pdf');
-    } else if (extension == '.png') {
-      mediaType = MediaType('image', 'png');
-    } else {
-      mediaType = MediaType('image', 'jpeg');
+      MediaType mediaType;
+      if (extension == '.pdf') {
+        mediaType = MediaType('application', 'pdf');
+      } else if (extension == '.png') {
+        mediaType = MediaType('image', 'png');
+      } else {
+        mediaType = MediaType('image', 'jpeg');
+      }
+
+      request.files.add(
+        await http.MultipartFile.fromPath(
+          'image',
+          groupImage,
+          contentType: mediaType,
+        ),
+      );
     }
-
-    request.files.add(
-      await http.MultipartFile.fromPath(
-      'image',
-      groupImage,
-      contentType: mediaType,
-    ),
-    );
     return request
         .send()
         .then((streamResponse) {

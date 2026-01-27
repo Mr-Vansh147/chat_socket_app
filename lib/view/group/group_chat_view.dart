@@ -1,7 +1,9 @@
 import 'package:chat_socket_practice/model/pass_group_model.dart';
 import 'package:chat_socket_practice/view/group/group_profile_view.dart';
+import 'package:chat_socket_practice/view/home/home_view.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../controller/auth/auth_controller.dart';
 import '../../controller/chat/chat_controller.dart';
 import '../../controller/group/group_chat_controller.dart';
 import '../../controller/home/home_controller.dart';
@@ -44,7 +46,7 @@ class _GroupChatViewState extends State<GroupChatView> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     IconButton(
-                      onPressed: () => Get.back(),
+                      onPressed: () => Get.off(() => HomeView(userID:Get.find<AuthController>().userId!)),
                       icon: const Icon(
                         Icons.arrow_back_ios_new,
                         color: Colors.green,

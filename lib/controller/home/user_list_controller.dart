@@ -21,26 +21,26 @@ class UserListController extends GetxController {
 
   List<Data?> list = [];
 
-  final ScrollController scrollController = ScrollController();
+  final ScrollController userScrollController = ScrollController();
 
   Timer? debounceTimer;
 
   @override
   void onInit() {
     super.onInit();
-    scrollController.addListener(onScroll);
+    userScrollController.addListener(onScroll);
   }
 
   void onScroll() {
-    if (scrollController.position.pixels < -80 &&
+    if (userScrollController.position.pixels < -80 &&
         !isLoading &&
         !isPulling &&
         currentUserId != null) {
       onPullDown();
     }
 
-    if (scrollController.position.pixels >=
-        scrollController.position.maxScrollExtent - 200 &&
+    if (userScrollController.position.pixels >=
+        userScrollController.position.maxScrollExtent - 200 &&
         !isLoading &&
         hasMore) {
       fetchUserList(loadMore: true);

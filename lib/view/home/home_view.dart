@@ -4,11 +4,10 @@ import 'package:chat_socket_practice/view/home/widgets/tab_button.dart';
 import 'package:chat_socket_practice/view/profile/profile_view.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-
-import '../../../controller/auth/auth_controller.dart';
 import '../../controller/home/group_list_controller.dart';
 import '../../controller/home/tab_controller.dart';
 import '../../controller/home/user_list_controller.dart';
+import '../../controller/profile/profile_controller.dart';
 import '../../model/pass_group_model.dart';
 import '../chat/chat_view.dart';
 import '../group/group_chat_view.dart';
@@ -33,6 +32,7 @@ class _HomeViewState extends State<HomeView> {
     homeCtrl.init(widget.userID);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      Get.find<ProfileController>().fetchUserProfile(widget.userID);
       userCtrl.fetchUserList(userId: widget.userID, reset: true);
       groupCtrl.fetchGroupList(userId: widget.userID, reset: true);
       FocusManager.instance.primaryFocus?.unfocus();
@@ -52,10 +52,10 @@ class _HomeViewState extends State<HomeView> {
           child: Column(
             crossAxisAlignment: .start,
             children: [
-              GetBuilder<AuthController>(
+              GetBuilder<ProfileController>(
                 builder: (controller) {
                   final imageUrl = controller.normalizeImageUrl(
-                    controller.userProfileImage,
+                  controller.user?.profileImage,
                   );
 
                   return Row(
@@ -72,7 +72,7 @@ class _HomeViewState extends State<HomeView> {
                               ),
                             ),
                             TextSpan(
-                              text: controller.userFirstName,
+                              text: controller.user?.firstName,
                               style: TextStyle(
                                 color: Colors.black45,
                                 fontSize: 20,
@@ -87,7 +87,7 @@ class _HomeViewState extends State<HomeView> {
                       IconButton(
                         onPressed: () {
                           Get.to(
-                            () => SelectUsersView(userID: controller.userId!),
+                            () => SelectUsersView(userID: widget.userID),
                             transition: Transition.leftToRightWithFade,
                           );
                         },
@@ -101,7 +101,7 @@ class _HomeViewState extends State<HomeView> {
 
                       GestureDetector(
                         onTap: () {
-                          Get.to(() => ProfileView(userID: controller.userId!));
+                          Get.to(() => ProfileView(userID: widget.userID));
                         },
                         child: CircleAvatar(
                           radius: 25,
@@ -190,7 +190,7 @@ class _HomeViewState extends State<HomeView> {
                         builder: (controller) {
                           return ListView.builder(
                             shrinkWrap: true,
-                            controller: controller.scrollController,
+                            controller: controller.userScrollController,
                             physics: const BouncingScrollPhysics(),
                             padding: EdgeInsets.zero,
                             itemCount:
