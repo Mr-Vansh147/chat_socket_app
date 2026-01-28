@@ -178,8 +178,6 @@ class AuthController extends GetxController {
           backgroundColor: Colors.green,
           colorText: Colors.white,
         );
-
-        Get.find<ChatController>().initSocket();
         Get.offAll(() => HomeView(userID: userId!));
       } else {
         Get.snackbar(

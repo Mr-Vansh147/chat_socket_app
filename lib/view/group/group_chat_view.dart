@@ -4,7 +4,6 @@ import 'package:chat_socket_practice/view/home/home_view.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../controller/auth/auth_controller.dart';
-import '../../controller/chat/chat_controller.dart';
 import '../../controller/group/group_chat_controller.dart';
 import '../../controller/home/home_controller.dart';
 import '../chat/widgets/attech_file_sheet.dart';
@@ -25,7 +24,7 @@ class _GroupChatViewState extends State<GroupChatView> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      groupChatController.setGroupId(widget.group.groupId);
+      groupChatController.startGroupChat(widget.group.groupId);
     });
   }
 
@@ -46,7 +45,10 @@ class _GroupChatViewState extends State<GroupChatView> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     IconButton(
-                      onPressed: () => Get.off(() => HomeView(userID:Get.find<AuthController>().userId!)),
+                      onPressed: () {
+                        controller.socketService.disconnect();
+                        Get.off(() => HomeView(userID:Get.find<AuthController>().userId!));
+                      },
                       icon: const Icon(
                         Icons.arrow_back_ios_new,
                         color: Colors.green,
@@ -149,14 +151,14 @@ class _GroupChatViewState extends State<GroupChatView> {
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: GetBuilder<ChatController>(
+                child: GetBuilder<GroupChatController>(
                   builder: (controller) {
                     return ListView.builder(
-                      controller: controller.scrollController,
+                      controller: controller.scrollGroupChatController,
                       padding: EdgeInsets.zero,
-                      itemCount: controller.messages.length,
+                      itemCount: controller.groupMessages.length,
                       itemBuilder: (context, index) {
-                        final msg = controller.messages[index];
+                        final msg = controller.groupMessages[index];
                         final isMe = msg.senderId == controller.myUserId;
 
                         return Column(
@@ -330,7 +332,11 @@ class _GroupChatViewState extends State<GroupChatView> {
       ),
       // Message input field
       bottomNavigationBar: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+        padding: EdgeInsets.only(
+          left: 16,
+          right: 16,
+          bottom: MediaQuery.of(context).viewInsets.bottom + 18,
+        ),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
@@ -349,7 +355,7 @@ class _GroupChatViewState extends State<GroupChatView> {
 
               Expanded(
                 child: TextField(
-                  controller: Get.find<ChatController>().messageController,
+                  controller: Get.find<GroupChatController>().messageController,
                   decoration: const InputDecoration(
                     hintText: "Type a message...",
                     border: InputBorder.none,
@@ -363,7 +369,7 @@ class _GroupChatViewState extends State<GroupChatView> {
                 child: IconButton(
                   icon: const Icon(Icons.send, color: Colors.white),
                   onPressed: () {
-                    Get.find<ChatController>().sendMessage();
+                    Get.find<GroupChatController>().sendMessage();
                   },
                 ),
               ),

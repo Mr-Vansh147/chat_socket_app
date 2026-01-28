@@ -21,7 +21,7 @@ class _ChatViewState extends State<ChatView> {
     super.initState();
     final ChatController chatController = Get.find<ChatController>();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      chatController.setReceiverId(widget.user.id);
+      chatController.startChat(widget.user.id);
     });
   }
 
@@ -40,7 +40,10 @@ class _ChatViewState extends State<ChatView> {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     IconButton(
-                      onPressed: () => Get.back(),
+                      onPressed: () {
+                        controller.socketService.disconnect();
+                        Get.back();
+                      },
                       icon: const Icon(
                         Icons.arrow_back_ios_new,
                         color: Colors.green,

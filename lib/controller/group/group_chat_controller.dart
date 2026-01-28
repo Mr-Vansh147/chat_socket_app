@@ -12,9 +12,7 @@ class GroupChatController extends GetxController {
   final SocketService socketService = SocketService();
   final TextEditingController messageController = TextEditingController();
   final ScrollController scrollGroupChatController = ScrollController();
-
   final ChatMessageRepo chatMessageRepo = ChatMessageRepo();
-
 
   String? myUserId;
   String? groupId;
@@ -23,44 +21,61 @@ class GroupChatController extends GetxController {
   bool isOtherTyping = false;
   Timer? typingTimer;
 
-  List<Data> messages = [];
+  List<Data> groupMessages = [];
+
+  Future<void> startGroupChat(String id) async {
+    if (groupId == id && socketService.isConnected) {
+      return;
+    }
+    groupId = id;
+    myUserId = await PrefService.getUserId();
+    if (myUserId == null) return;
+    groupMessages.clear();
+    update();
+
+    if (!socketService.isConnected) {
+      socketService.connect(myUserId!);
+      // wait for socket connection
+      while (!socketService.isConnected) {
+        await Future.delayed(Duration(milliseconds: 50));
+      }
+    }
+    socketService.joinGroup(groupId!);
+    initGroupSocket();
+    // loadGroupMessagesFromApi();
+  }
 
   // Open Pdf
   Future<void> openPdf(String pdfUrl) async {
     final uri = Uri.parse(pdfUrl);
 
-    if (!await launchUrl(
-      uri,
-      mode: LaunchMode.externalApplication,
-    )) {
+    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
       debugPrint("Could not open PDF");
     }
   }
 
-  @override
-  void onInit() {
-    super.onInit();
-    initGroupSocket();
-  }
-
   // convert into local time
-  DateTime getMessageTime(String createAt){
+  DateTime getMessageTime(String createAt) {
     return DateTime.parse(createAt).toLocal();
   }
 
   // compare with today, yesterday
-  String getMessageDate(String createdAt){
+  String getMessageDate(String createdAt) {
     final messageTime = getMessageTime(createdAt);
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final yesterday = today.subtract(const Duration(days: 1));
-    final messageDate = DateTime(messageTime.year, messageTime.month, messageTime.day);
+    final messageDate = DateTime(
+      messageTime.year,
+      messageTime.month,
+      messageTime.day,
+    );
 
-    if(messageDate == today){
+    if (messageDate == today) {
       return 'Today';
-    }else if(messageDate == yesterday) {
+    } else if (messageDate == yesterday) {
       return 'Yesterday';
-    }else{
+    } else {
       return '${messageDate.day}/${messageDate.month}/${messageDate.year}';
     }
   }
@@ -68,8 +83,8 @@ class GroupChatController extends GetxController {
   //show message Header
   bool showMessageHeader(int index) {
     if (index == 0) return true;
-    DateTime currentTime = getMessageTime(messages[index].createdAt!);
-    DateTime previousTime = getMessageTime(messages[index - 1].createdAt!);
+    DateTime currentTime = getMessageTime(groupMessages[index].createdAt!);
+    DateTime previousTime = getMessageTime(groupMessages[index - 1].createdAt!);
     return currentTime.day != previousTime.day ||
         currentTime.month != previousTime.month ||
         currentTime.year != previousTime.year;
@@ -94,121 +109,77 @@ class GroupChatController extends GetxController {
     });
   }
 
-  Future<void> loadGroupMessagesFromApi() async {
-    if (myUserId == null || groupId == null) return;
-
-    try {
-      final response = await chatMessageRepo.getMessages(
-        senderId: myUserId!,
-        receiverId: groupId!,
-      );
-
-      messages.clear();
-      messages.addAll(response?.data ?? []);
-      update();
-      scrollToBottom();
-    } catch (e) {
-      print("Error loading messages: $e");
-    }
-  }
+  // Future<void> loadGroupMessagesFromApi() async {
+  //   if (myUserId == null || groupId == null) return;
+  //
+  //   try {
+  //     final response = await chatMessageRepo.getMessages(
+  //       senderId: myUserId!,
+  //       receiverId: groupId!,
+  //     );
+  //
+  //     messages.clear();
+  //     messages.addAll(response?.data ?? []);
+  //     update();
+  //     scrollToBottom();
+  //   } catch (e) {
+  //     print("Error loading messages: $e");
+  //   }
+  // }
 
   Future<void> initGroupSocket() async {
     myUserId = await PrefService.getUserId();
+    if (myUserId == null || groupId == null) return;
 
-    if (myUserId == null) {
-      print("UserId not found");
-      return;
-    }
-    print("UserId: $myUserId");
+    // socketService.joinGroup(
+    //   groupId!,
+    // );
 
-    socketService.connect(myUserId!);
+    socketService.receiveGroupMessage((data) {
+      final String senderId = data["senderId"];
+      final String incomingGroupId = data["groupId"];
 
-    socketService.receiveMessage((data) {
-      if (myUserId == null || groupId == null) return;
-
-      final String sender = data["senderId"];
-      final String receiver = data["receiverId"];
-
-      final bool isCurrentChat =
-          (sender == groupId && receiver == myUserId) ||
-              (sender == myUserId && receiver == groupId);
-
-      if (!isCurrentChat) return;
-
-      messages.add(
+      if (incomingGroupId != groupId) return;
+      if (senderId == myUserId) return;
+      groupMessages.add(
         Data(
-          senderId: sender,
-          receiverId: receiver,
+          senderId: senderId,
+          receiverId: incomingGroupId,
           message: data["message"],
-          image: data["image"],
-          messageType: data["messageType"],
-          createdAt: data["createdAt"],
+          // image: data["image"],
+          // messageType: data["messageType"],
+          // createdAt: data["createdAt"],
         ),
       );
 
       update();
       scrollToBottom();
     });
-
-    // socketService.onTyping(
-    //   callback: (senderId) {
-    //     if (senderId == groupId) {
-    //       setTypingStatues(true);
-    //     }
-    //   },
-    // );
-    //
-    // socketService.onStopTyping(
-    //   callback: (senderId) {
-    //     if (senderId == groupId) {
-    //       setTypingStatues(false);
-    //     }
-    //   },
-    // );
-
-  }
-
-  void setGroupId(String id) {
-    groupId = id;
-    print("groupId: $groupId");
-    messages.clear();
-    update();
-    loadGroupMessagesFromApi();
   }
 
   // send text messages
   void sendMessage() {
     final text = messageController.text.trim();
+    if (text.isEmpty || myUserId == null || groupId == null) return;
 
-    if (text.isEmpty) return;
-    if (myUserId == null || groupId == null) {
-      print("UserId or ReceiverId is null");
-      return;
-    }
-    if (!socketService.isConnected) {
-      print("Socket not connected");
-      return;
-    }
+    groupMessages.add(
+      Data(
+        senderId: myUserId,
+        receiverId: groupId,
+        message: text,
+        messageType: "text",
+        createdAt: DateTime.now().toIso8601String(),
+      ),
+    );
 
-    // messages.add(
-    //   Data(
-    //     senderId: myUserId,
-    //     receiverId: receiverId,
-    //     message: text,
-    //     messageType: "text",
-    //     createdAt: DateTime.now().toIso8601String(),
-    //   ),
-    // );
     update();
     scrollToBottom();
 
-    // socketService.sendMessage(
-    //   senderId: myUserId!,
-    //   receiverId: receiverId!,
-    //   message: text,
-    //   image: null,
-    //   type: "text",
-    // );
+    socketService.sendGroupMessage(
+      senderId: myUserId!,
+      groupId: groupId!,
+      message: text,
+    );
 
     messageController.clear();
   }
@@ -229,7 +200,7 @@ class GroupChatController extends GetxController {
   //       createdAt: DateTime.now().toIso8601String(),
   //     ),
   //   );
-  //
+  // //
   //   update();
   //   scrollToBottom();
   //
@@ -242,36 +213,34 @@ class GroupChatController extends GetxController {
   //   );
   // }
 
-  // send File
-  // void sendFile({
-  //   required String fileUrl,
-  //   required String fileName,
-  // }) {
-  //   if (myUserId == null || receiverId == null) return;
-  //   if (!socketService.isConnected) return;
+  //send File
+  //  void sendFile({
+  //    required String fileUrl,
+  //    required String fileName,
+  //  }) {
+  //    if (myUserId == null || receiverId == null) return;
+  //    if (!socketService.isConnected) return;
   //
-  //   messages.add(
-  //     Data(
-  //       senderId: myUserId,
-  //       receiverId: receiverId,
-  //       image: fileUrl,
-  //       messageType: "pdf",
-  //       createdAt: DateTime.now().toIso8601String(),
-  //     ),
-  //   );
+  //    messages.add(
+  //      Data(
+  //        senderId: myUserId,
+  //        receiverId: receiverId,
+  //        image: fileUrl,
+  //        messageType: "pdf",
+  //        createdAt: DateTime.now().toIso8601String(),
+  //      ),
+  //    );
   //
-  //   update();
-  //   scrollToBottom();
+  //    update();
+  //    scrollToBottom();
   //
-  //   socketService.sendMessage(
-  //     senderId: myUserId!,
-  //     receiverId: receiverId!,
-  //     image: fileUrl,
-  //     type: "pdf",
-  //   );
-  // }
-
-
+  //    socketService.sendMessage(
+  //      senderId: myUserId!,
+  //      receiverId: receiverId!,
+  //      image: fileUrl,
+  //      type: "pdf",
+  //    );
+  //  }
 
   //set typing status
   // void setTypingStatues(bool value){
@@ -316,5 +285,4 @@ class GroupChatController extends GetxController {
   //   socketService.disconnect();
   //   update();
   // }
-
 }

@@ -1,13 +1,14 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../services/socket_service.dart';
 import 'user_list_controller.dart';
 import 'group_list_controller.dart';
 
 class HomeController extends GetxController {
   final UserListController userCtrl = Get.find<UserListController>();
   final GroupListController groupCtrl = Get.find<GroupListController>();
-
+  final SocketService socketService = SocketService();
   final TextEditingController searchController = TextEditingController();
   Timer? debounce;
 
@@ -95,4 +96,5 @@ class HomeController extends GetxController {
 
     update();
   }
+
 }

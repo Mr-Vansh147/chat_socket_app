@@ -15,7 +15,6 @@ class ChatController extends GetxController {
 
   final ChatMessageRepo chatMessageRepo = ChatMessageRepo();
 
-
   String? myUserId;
   String? receiverId;
 
@@ -29,38 +28,39 @@ class ChatController extends GetxController {
   Future<void> openPdf(String pdfUrl) async {
     final uri = Uri.parse(pdfUrl);
 
-    if (!await launchUrl(
-      uri,
-      mode: LaunchMode.externalApplication,
-    )) {
+    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
       debugPrint("Could not open PDF");
     }
   }
 
-  @override
-  void onInit() {
-    super.onInit();
-    initSocket();
-  }
+  // @override
+  // void onClose() {
+  //   socketService.disconnect();
+  //   super.onClose();
+  // }
 
   // convert into local time
-  DateTime getMessageTime(String createAt){
+  DateTime getMessageTime(String createAt) {
     return DateTime.parse(createAt).toLocal();
   }
 
   // compare with today, yesterday
-  String getMessageDate(String createdAt){
+  String getMessageDate(String createdAt) {
     final messageTime = getMessageTime(createdAt);
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final yesterday = today.subtract(const Duration(days: 1));
-    final messageDate = DateTime(messageTime.year, messageTime.month, messageTime.day);
+    final messageDate = DateTime(
+      messageTime.year,
+      messageTime.month,
+      messageTime.day,
+    );
 
-    if(messageDate == today){
+    if (messageDate == today) {
       return 'Today';
-    }else if(messageDate == yesterday) {
+    } else if (messageDate == yesterday) {
       return 'Yesterday';
-    }else{
+    } else {
       return '${messageDate.day}/${messageDate.month}/${messageDate.year}';
     }
   }
@@ -79,9 +79,7 @@ class ChatController extends GetxController {
     if (!scrollController.hasClients) return;
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      scrollController.jumpTo(
-        scrollController.position.maxScrollExtent,
-      );
+      scrollController.jumpTo(scrollController.position.maxScrollExtent);
 
       Future.delayed(const Duration(milliseconds: 100), () {
         if (!scrollController.hasClients) return;
@@ -92,6 +90,19 @@ class ChatController extends GetxController {
         );
       });
     });
+  }
+
+  Future<void> startChat(String userId) async {
+    receiverId = userId;
+    myUserId = await PrefService.getUserId();
+    if (myUserId == null) return;
+
+    // Connect socket once
+    if (!socketService.isConnected) {
+      socketService.connect(myUserId!);
+    }
+    initSocket();
+    loadMessagesFromApi();
   }
 
   Future<void> loadMessagesFromApi() async {
@@ -121,8 +132,6 @@ class ChatController extends GetxController {
     }
     print("UserId: $myUserId");
 
-    socketService.connect(myUserId!);
-
     socketService.receiveMessage((data) {
       if (myUserId == null || receiverId == null) return;
 
@@ -131,7 +140,7 @@ class ChatController extends GetxController {
 
       final bool isCurrentChat =
           (sender == receiverId && receiver == myUserId) ||
-              (sender == myUserId && receiver == receiverId);
+          (sender == myUserId && receiver == receiverId);
 
       if (!isCurrentChat) return;
 
@@ -165,15 +174,6 @@ class ChatController extends GetxController {
         }
       },
     );
-
-  }
-
-  void setReceiverId(String id) {
-    receiverId = id;
-    print("receiverId: $receiverId");
-    messages.clear();
-    update();
-    loadMessagesFromApi();
   }
 
   // send text messages
@@ -186,7 +186,7 @@ class ChatController extends GetxController {
       return;
     }
     if (!socketService.isConnected) {
-     print("Socket not connected");
+      print("Socket not connected");
       return;
     }
 
@@ -218,7 +218,6 @@ class ChatController extends GetxController {
     if (myUserId == null || receiverId == null) return;
     if (!socketService.isConnected) return;
 
-
     messages.add(
       Data(
         senderId: myUserId,
@@ -243,10 +242,7 @@ class ChatController extends GetxController {
   }
 
   // send File
-  void sendFile({
-    required String fileUrl,
-    required String fileName,
-  }) {
+  void sendFile({required String fileUrl, required String fileName}) {
     if (myUserId == null || receiverId == null) return;
     if (!socketService.isConnected) return;
 
@@ -271,11 +267,9 @@ class ChatController extends GetxController {
     );
   }
 
-
-
   //set typing status
-  void setTypingStatues(bool value){
-    if(isOtherTyping == value) return;
+  void setTypingStatues(bool value) {
+    if (isOtherTyping == value) return;
     isOtherTyping = value;
     update();
   }
@@ -289,10 +283,7 @@ class ChatController extends GetxController {
 
     if (text.isNotEmpty && !isTyping) {
       isTyping = true;
-      socketService.emitTyping(
-        senderId: myUserId!,
-        receiverId: receiverId!,
-      );
+      socketService.emitTyping(senderId: myUserId!, receiverId: receiverId!);
     }
 
     typingTimer?.cancel();
@@ -316,5 +307,4 @@ class ChatController extends GetxController {
     socketService.disconnect();
     update();
   }
-
 }

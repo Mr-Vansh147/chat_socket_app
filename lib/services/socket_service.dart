@@ -7,17 +7,21 @@ class SocketService {
   SocketService._internal();
 
   IO.Socket? socket;
+  bool get isConnected => socket != null && socket!.connected;
 
-  void connect(String userId) {
+  void connect(String userId) async{
+    if (isConnected) return;
     socket = IO.io(
       ApiEndPoints.socketUrl,
       IO.OptionBuilder().setTransports(['websocket']).build(),
     );
 
-    socket!.onConnect((_) {
+   socket!.onConnect((_) {
       print("Connected to socket");
       socket!.emit("join", userId);
     });
+
+   socket!.connect();
 
     socket!.onDisconnect((_) {
       print("Disconnected from socket");
@@ -26,6 +30,7 @@ class SocketService {
 
   void disconnect() {
     if (socket != null) {
+      socket!.offAny();
       socket!.disconnect();
       socket!.dispose();
       socket = null;
@@ -33,9 +38,7 @@ class SocketService {
     }
   }
 
-  bool get isConnected => socket != null && socket!.connected;
-
-  // SEND MESSAGE
+  // user send msg
   void sendMessage({
     required String senderId,
     required String receiverId,
@@ -62,21 +65,55 @@ class SocketService {
     );
   }
 
-  void emitTyping({
-    required String senderId,
-    required String receiverId,
-  }) {
-    if (!isConnected || socket == null) return;
-    socket!.emit("typing", {
-      "senderId": senderId,
-      "receiverId": receiverId,
+  // user receive msg
+  void receiveMessage(Function(Map data) onReceiveMessage) {
+    socket?.off("receiveMessage");
+    socket?.on("receiveMessage", (data) {
+      onReceiveMessage(data);
     });
   }
 
-  void emitStopTyping({
+  // join group
+  void joinGroup(String groupId) {
+    if (!isConnected) return;
+    socket!.emit("joinGroup", {"groupId": groupId});
+    print("Joined group → $groupId");
+  }
+
+  // send msg in group
+  void sendGroupMessage({
     required String senderId,
-    required String receiverId,
+    required String groupId,
+    String? message,
+    // String? image,
+    // String? type,
   }) {
+    if (!isConnected) {
+      print("Socket not connected");
+      return;
+    }
+
+    socket!.emit("sendGroupMessage", {
+      "payload": {"senderId": senderId, "groupId": groupId, "message": message},
+    });
+
+    print("GROUP SEND → sender:$senderId group:$groupId msg:$message ");
+  }
+
+  void receiveGroupMessage(Function(Map data) onReceive) {
+    socket?.off("receiveGroupMessage");
+    socket?.on("receiveGroupMessage", (data) {
+      if (data == null) return;
+      onReceive(data);
+    });
+  }
+
+  void emitTyping({required String senderId, required String receiverId}) {
+    if (!isConnected || socket == null) return;
+    socket!.emit("typing", {"senderId": senderId, "receiverId": receiverId});
+  }
+
+  void emitStopTyping({required String senderId, required String receiverId}) {
     if (!isConnected || socket == null) return;
     socket!.emit("stopTyping", {
       "senderId": senderId,
@@ -84,10 +121,7 @@ class SocketService {
     });
   }
 
-
-  void onTyping({
-    required Function(String senderId) callback,
-  }) {
+  void onTyping({required Function(String senderId) callback}) {
     socket?.on("typing", (data) {
       if (data == null) return;
       callback(data["senderId"]);
@@ -95,21 +129,11 @@ class SocketService {
     });
   }
 
-  void onStopTyping({
-    required Function(String senderId) callback,
-  }) {
+  void onStopTyping({required Function(String senderId) callback}) {
     socket?.on("stopTyping", (data) {
       if (data == null) return;
       callback(data["senderId"]);
       print("ON → stopTyping | sender: ${data["senderId"]}");
-    });
-  }
-
-
-  void receiveMessage(Function(Map data) onReceiveMessage) {
-    socket?.off("receiveMessage");
-    socket?.on("receiveMessage", (data) {
-      onReceiveMessage(data);
     });
   }
 }
